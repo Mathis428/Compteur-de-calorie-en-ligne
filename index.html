@@ -94,62 +94,18 @@
         td button {
             background: #e91e63;
         }
-        .message {
-            margin: 10px 0;
-            padding: 10px;
-            border-radius: 5px;
-            text-align: center;
-        }
-        .message.success {
-            background: #4caf50;
-        }
-        .message.error {
-            background: #f44336;
-        }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.emailjs.com/dist/email.min.js"></script>
 </head>
 <body>
     <header>
         Compteur de Calorie en Ligne
     </header>
     <div class="container">
-        <div id="auth" class="section active">
-            <h2>Connexion ou Inscription</h2>
-            <div id="loginForm">
-                <h3>Connexion</h3>
-                <label for="loginPseudo">Pseudo :</label>
-                <input type="text" id="loginPseudo">
-                <label for="loginPassword">Mot de passe :</label>
-                <input type="password" id="loginPassword">
-                <button onclick="login()">Se connecter</button>
-                <div id="loginMessage" class="message"></div>
-            </div>
-            <div id="registerForm">
-                <h3>Inscription</h3>
-                <label for="registerEmail">Email :</label>
-                <input type="email" id="registerEmail">
-                <label for="registerPseudo">Pseudo :</label>
-                <input type="text" id="registerPseudo">
-                <label for="registerPassword">Mot de passe :</label>
-                <input type="password" id="registerPassword">
-                <button onclick="sendVerificationCode()">S'inscrire</button>
-                <div id="registerMessage" class="message"></div>
-                <div id="verificationForm" style="display: none;">
-                    <label for="verificationCode">Code de vérification :</label>
-                    <input type="text" id="verificationCode">
-                    <button onclick="verifyCode()">Vérifier</button>
-                    <div id="verificationMessage" class="message"></div>
-                </div>
-            </div>
-        </div>
-        <div id="menu" class="section">
+        <div id="menu" class="section active">
             <h2>Menu Principal</h2>
             <button onclick="showSection('calcul')">Calculer les calories</button>
             <button onclick="showSection('graphique')">Voir l'évolution</button>
-            <button onclick="logout()">Se déconnecter</button>
-            <button onclick="supprimerCompte()">Supprimer mon compte</button>
         </div>
         <div id="calcul" class="section">
             <h2>Calcul des Calories</h2>
@@ -206,268 +162,306 @@
         </div>
     </div>
     <footer>
-        &copy; 2024 Compteur de Calorie en Ligne - <a href="mailto:contact@caloriecompteur.com">Contactez-nous</a>
+        &copy; 2024 Compteur de Calorie en Ligne
     </footer>
     <script>
-        // Initialize EmailJS with your user ID
-        emailjs.init("YOUR_EMAILJS_USER_ID");
+        document.getElementById('regime').addEventListener('change', function() {
+            const regime = document.getElementById('regime').value;
+            const surplusDeficitText = document.getElementById('surplusDeficitText');
+            const surplusDeficit = document.getElementById('surplusDeficit');
+            if (regime == '1') {
+                surplusDeficitText.innerText = 'surplus';
+                surplusDeficit.style.display = 'block';
+            } else if (regime == '2') {
+                surplusDeficitText.innerText = 'déficit';
+                surplusDeficit.style.display = 'block';
+            } else {
+                surplusDeficit.style.display = 'none';
+            }
+        });
 
-        // Current user and data storage
-        let currentUser = null;
-        const users = JSON.parse(localStorage.getItem("users")) || [];
+        document.getElementsByName('musculation').forEach(radio => {
+            radio.addEventListener('change', function() {
+                const detailsMuscu = document.getElementById('detailsMuscu');
+                if (document.getElementById('muscuOui').checked) {
+                    detailsMuscu.style.display = 'block';
+                } else {
+                    detailsMuscu.style.display = 'none';
+                }
+            });
+        });
 
-        // Show specific section
         function showSection(id) {
-            document.querySelectorAll(".section").forEach(section => section.classList.remove("active"));
-            document.getElementById(id).classList.add("active");
-        }
-
-        // Toggle details based on regime choice
-        document.getElementById("regime").addEventListener("change", function () {
-            const regime = this.value;
-            const surplusDeficitText = regime === "1" ? "surplus" : "déficit";
-            document.getElementById("surplusDeficitText").textContent = surplusDeficitText;
-            document.getElementById("labelSurplusDeficit").textContent = `De combien de calories voulez-vous être en ${surplusDeficitText} ?`;
-        });
-
-        // Toggle musculation details
-        document.querySelectorAll("input[name='musculation']").forEach(radio => {
-            radio.addEventListener("change", function () {
-                document.getElementById("detailsMuscu").style.display = this.value === "oui" ? "block" : "none";
+            document.querySelectorAll('.section').forEach(section => {
+                section.classList.remove('active');
             });
-        });
-
-        // Send verification code to email
-        function sendVerificationCode() {
-            const email = document.getElementById("registerEmail").value;
-            if (!email) {
-                document.getElementById("registerMessage").textContent = "Veuillez entrer une adresse email valide.";
-                document.getElementById("registerMessage").classList.add("error");
-                return;
-            }
-            const code = Math.floor(100000 + Math.random() * 900000).toString();
-            localStorage.setItem("verificationCode", code);
-            emailjs.send("YOUR_SERVICE_ID", "YOUR_TEMPLATE_ID", {
-                to_email: email,
-                verification_code: code
-            }).then(response => {
-                document.getElementById("registerMessage").textContent = "Code de vérification envoyé. Vérifiez votre email.";
-                document.getElementById("registerMessage").classList.remove("error");
-                document.getElementById("registerMessage").classList.add("success");
-                document.getElementById("verificationForm").style.display = "block";
-            }).catch(error => {
-                document.getElementById("registerMessage").textContent = "Erreur lors de l'envoi du code de vérification.";
-                document.getElementById("registerMessage").classList.add("error");
-            });
-        }
-
-        // Verify the code
-        function verifyCode() {
-            const enteredCode = document.getElementById("verificationCode").value;
-            const storedCode = localStorage.getItem("verificationCode");
-            if (enteredCode === storedCode) {
-                const email = document.getElementById("registerEmail").value;
-                const pseudo = document.getElementById("registerPseudo").value;
-                const password = document.getElementById("registerPassword").value;
-                if (users.some(user => user.pseudo === pseudo)) {
-                    document.getElementById("verificationMessage").textContent = "Pseudo déjà utilisé. Choisissez un autre pseudo.";
-                    document.getElementById("verificationMessage").classList.add("error");
-                    return;
-                }
-                users.push({ email, pseudo, password, history: [] });
-                localStorage.setItem("users", JSON.stringify(users));
-                document.getElementById("verificationMessage").textContent = "Inscription réussie. Vous pouvez maintenant vous connecter.";
-                document.getElementById("verificationMessage").classList.remove("error");
-                document.getElementById("verificationMessage").classList.add("success");
-                document.getElementById("verificationForm").style.display = "none";
-                document.getElementById("registerForm").reset();
-            } else {
-                document.getElementById("verificationMessage").textContent = "Code de vérification incorrect.";
-                document.getElementById("verificationMessage").classList.add("error");
+            document.getElementById(id).classList.add('active');
+            if (id === 'graphique') {
+                afficherGraphiques();
+                afficherTableau();
             }
         }
 
-        // Login function
-        function login() {
-            const pseudo = document.getElementById("loginPseudo").value;
-            const password = document.getElementById("loginPassword").value;
-            const user = users.find(user => user.pseudo === pseudo && user.password === password);
-            if (user) {
-                currentUser = user;
-                showSection("menu");
-                document.getElementById("loginMessage").textContent = "";
-                document.getElementById("loginForm").reset();
-            } else {
-                document.getElementById("loginMessage").textContent = "Pseudo ou mot de passe incorrect.";
-                document.getElementById("loginMessage").classList.add("error");
-            }
-        }
-
-        // Logout function
-        function logout() {
-            currentUser = null;
-            showSection("auth");
-        }
-
-        // Delete account function
-        function supprimerCompte() {
-            if (currentUser) {
-                const confirmation = confirm("Êtes-vous sûr de vouloir supprimer votre compte ?");
-                if (confirmation) {
-                    const index = users.findIndex(user => user.pseudo === currentUser.pseudo);
-                    if (index > -1) {
-                        users.splice(index, 1);
-                        localStorage.setItem("users", JSON.stringify(users));
-                        logout();
-                        alert("Compte supprimé avec succès.");
-                    } else {
-                        alert("Erreur lors de la suppression du compte.");
-                    }
-                }
-            }
-        }
-
-        // Calculate calories
         function calculerCalories() {
-            const regime = document.getElementById("regime").value;
-            const calories = parseInt(document.getElementById("calories").value);
-            const caloriesBrulees = parseInt(document.getElementById("caloriesBrulees").value);
-            const faitMuscu = document.querySelector("input[name='musculation']:checked").value === "oui";
+            const regime = document.getElementById('regime').value;
+            const calories = parseInt(document.getElementById('calories').value) || 0;
+            let caloriesBrulees = parseInt(document.getElementById('caloriesBrulees').value) || 0;
+            const faitMuscu = document.getElementById('muscuOui').checked;
             let caloriesMuscu = 0;
             let dureeMuscu = 0;
             let poids = 0;
-            if (faitMuscu) {
-                caloriesMuscu = parseInt(document.getElementById("caloriesMuscu").value);
-                dureeMuscu = parseInt(document.getElementById("dureeMuscu").value);
-                poids = parseInt(document.getElementById("poids").value);
-            }
-            const totalCalories = regime == "1" ? (caloriesBrulees + (faitMuscu ? caloriesMuscu : 0)) + calories : (caloriesBrulees + (faitMuscu ? caloriesMuscu : 0)) - calories;
-            document.getElementById("resultat").textContent = `Votre apport calorique total pour aujourd'hui est de ${totalCalories} calories.`;
 
-            // Save data to current user
-            if (currentUser) {
-                const today = new Date().toLocaleDateString();
-                const record = {
-                    date: today,
-                    totalCalories,
-                    caloriesBrulees,
-                    caloriesMuscu: faitMuscu ? caloriesMuscu : 0,
-                    dureeMuscu: faitMuscu ? dureeMuscu : 0,
-                    poids: faitMuscu ? poids : 0
-                };
-                currentUser.history.push(record);
-                localStorage.setItem("users", JSON.stringify(users));
-                updateGraph();
-                updateTable();
+            if (faitMuscu) {
+                const caloriesMuscuSaisie = parseInt(document.getElementById('caloriesMuscu').value) || 0;
+                dureeMuscu = parseInt(document.getElementById('dureeMuscu').value) || 0;
+                poids = parseFloat(document.getElementById('poids').value) || 0;
+
+                // Calcul des nouvelles calories brûlées pendant la musculation
+                caloriesMuscu = 3.5 * 3.5 * (poids / 200) * dureeMuscu;
+
+                // Ajuster les calories brûlées par la séance de musculation
+                caloriesBrulees = caloriesBrulees - caloriesMuscuSaisie + caloriesMuscu;
             }
+
+            let totalCalories = 2000; // Calories de maintenance
+            if (regime == '1') {
+                totalCalories += calories; // Prise de masse (surplus)
+            } else if (regime == '2') {
+                totalCalories -= calories; // Sèche (déficit)
+            }
+            totalCalories += caloriesBrulees;
+
+            document.getElementById('resultat').innerText = 'Votre total de calories pour aujourd\'hui est : ' + totalCalories + ' calories.';
+
+            // Sauvegarder les données dans localStorage
+            sauvegarderDonnees(totalCalories, caloriesBrulees, caloriesMuscu, dureeMuscu, poids);
         }
 
-        // Update graph data
-        function updateGraph() {
-            if (!currentUser) return;
+        function sauvegarderDonnees(totalCalories, caloriesBrulees, caloriesMuscu, dureeMuscu, poids) {
+            const date = new Date().toISOString().split('T')[0]; // Format YYYY-MM-DD
+            const donnees = {
+                date: date,
+                totalCalories: totalCalories,
+                caloriesBrulees: caloriesBrulees,
+                caloriesMuscu: caloriesMuscu,
+                dureeMuscu: dureeMuscu,
+                poids: poids
+            };
 
-            const labels = currentUser.history.map(record => record.date);
-            const totalCaloriesData = currentUser.history.map(record => record.totalCalories);
-            const caloriesBruleesData = currentUser.history.map(record => record.caloriesBrulees);
-            const caloriesMuscuData = currentUser.history.map(record => record.caloriesMuscu);
-            const dureeMuscuData = currentUser.history.map(record => record.dureeMuscu);
-            const poidsData = currentUser.history.map(record => record.poids);
+            let historique = JSON.parse(localStorage.getItem('historiqueCalories')) || [];
+            historique.push(donnees);
+            localStorage.setItem('historiqueCalories', JSON.stringify(historique));
+        }
 
-            const ctxCalories = document.getElementById("graphiqueCalories").getContext("2d");
+        function afficherGraphiques() {
+            const historique = JSON.parse(localStorage.getItem('historiqueCalories')) || [];
+            const labels = historique.map(d => d.date);
+            const dataCalories = historique.map(d => d.totalCalories);
+            const dataPoids = historique.map(d => d.poids);
+            const dataDuree = historique.map(d => d.dureeMuscu);
+            const dataSurplusDeficit = historique.map(d => {
+                const regime = d.totalCalories - d.caloriesBrulees;
+                return regime > 2000 ? regime - 2000 : 2000 - regime;
+            });
+
+            const ctxCalories = document.getElementById('graphiqueCalories').getContext('2d');
+            const ctxPoids = document.getElementById('graphiquePoids').getContext('2d');
+            const ctxDuree = document.getElementById('graphiqueDuree').getContext('2d');
+            const ctxSurplusDeficit = document.getElementById('graphiqueSurplusDeficit').getContext('2d');
+
             new Chart(ctxCalories, {
                 type: 'line',
                 data: {
-                    labels,
-                    datasets: [
-                        {
-                            label: 'Calories Totales',
-                            data: totalCaloriesData,
-                            borderColor: 'rgb(75, 192, 192)',
-                            tension: 0.1
-                        },
-                        {
-                            label: 'Calories Brûlées',
-                            data: caloriesBruleesData,
-                            borderColor: 'rgb(255, 99, 132)',
-                            tension: 0.1
-                        }
-                    ]
+                    labels: labels,
+                    datasets: [{
+                        label: 'Total Calories',
+                        data: dataCalories,
+                        borderColor: '#00bcd4',
+                        backgroundColor: 'rgba(0, 188, 212, 0.2)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.1
+                    }]
                 },
                 options: {
+                    responsive: true,
                     scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Date'
+                            }
+                        },
                         y: {
-                            beginAtZero: true
+                            title: {
+                                display: true,
+                                text: 'Calories'
+                            }
                         }
                     }
                 }
             });
 
-            const ctxMuscu = document.getElementById("graphiquePoids").getContext("2d");
-            new Chart(ctxMuscu, {
+            new Chart(ctxPoids, {
                 type: 'line',
                 data: {
-                    labels,
-                    datasets: [
-                        {
-                            label: 'Poids',
-                            data: poidsData,
-                            borderColor: 'rgb(54, 162, 235)',
-                            tension: 0.1
-                        }
-                    ]
+                    labels: labels,
+                    datasets: [{
+                        label: 'Poids (kg)',
+                        data: dataPoids,
+                        borderColor: '#ff9800',
+                        backgroundColor: 'rgba(255, 152, 0, 0.2)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.1
+                    }]
                 },
                 options: {
+                    responsive: true,
                     scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Date'
+                            }
+                        },
                         y: {
-                            beginAtZero: true
+                            title: {
+                                display: true,
+                                text: 'Poids (kg)'
+                            }
                         }
                     }
                 }
             });
 
-            const ctxDuree = document.getElementById("graphiqueDuree").getContext("2d");
             new Chart(ctxDuree, {
                 type: 'line',
                 data: {
-                    labels,
-                    datasets: [
-                        {
-                            label: 'Durée Muscu',
-                            data: dureeMuscuData,
-                            borderColor: 'rgb(75, 192, 192)',
-                            tension: 0.1
-                        }
-                    ]
+                    labels: labels,
+                    datasets: [{
+                        label: 'Durée Musculation (min)',
+                        data: dataDuree,
+                        borderColor: '#8bc34a',
+                        backgroundColor: 'rgba(139, 195, 74, 0.2)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.1
+                    }]
                 },
                 options: {
+                    responsive: true,
                     scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Date'
+                            }
+                        },
                         y: {
-                            beginAtZero: true
+                            title: {
+                                display: true,
+                                text: 'Durée Musculation (min)'
+                            }
+                        }
+                    }
+                }
+            });
+
+            new Chart(ctxSurplusDeficit, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Surplus/Déficit Calories',
+                        data: dataSurplusDeficit,
+                        borderColor: '#e91e63',
+                        backgroundColor: 'rgba(233, 30, 99, 0.2)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Date'
+                            }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'Surplus/Déficit Calories'
+                            }
                         }
                     }
                 }
             });
         }
 
-        // Update table data
-        function updateTable() {
-            if (!currentUser) return;
-
-            const tbody = document.getElementById("historiqueTableBody");
+        function afficherTableau() {
+            const historique = JSON.parse(localStorage.getItem('historiqueCalories')) || [];
+            const tbody = document.getElementById('tableHistorique').getElementsByTagName('tbody')[0];
             tbody.innerHTML = '';
 
-            currentUser.history.forEach(record => {
-                const row = document.createElement("tr");
-                row.innerHTML = `
-                    <td>${record.date}</td>
-                    <td>${record.totalCalories}</td>
-                    <td>${record.caloriesBrulees}</td>
-                    <td>${record.caloriesMuscu}</td>
-                    <td>${record.dureeMuscu}</td>
-                    <td>${record.poids}</td>
-                `;
-                tbody.appendChild(row);
+            historique.forEach((donnee, index) => {
+                const tr = document.createElement('tr');
+
+                Object.keys(donnee).forEach(key => {
+                    const td = document.createElement('td');
+                    td.innerText = donnee[key];
+                    tr.appendChild(td);
+                });
+
+                const tdActions = document.createElement('td');
+                const btnModifier = document.createElement('button');
+                btnModifier.innerText = 'Modifier';
+                btnModifier.onclick = () => modifierDonnee(index);
+                const btnSupprimer = document.createElement('button');
+                btnSupprimer.innerText = 'Supprimer';
+                btnSupprimer.onclick = () => supprimerDonnee(index);
+                tdActions.appendChild(btnModifier);
+                tdActions.appendChild(btnSupprimer);
+                tr.appendChild(tdActions);
+
+                tbody.appendChild(tr);
             });
+        }
+
+        function modifierDonnee(index) {
+            const historique = JSON.parse(localStorage.getItem('historiqueCalories')) || [];
+            const donnee = historique[index];
+
+            document.getElementById('regime').value = '3'; // Default to Maintenance
+            document.getElementById('calories').value = donnee.calories || 0;
+            document.getElementById('caloriesBrulees').value = donnee.caloriesBrulees || 0;
+            if (donnee.caloriesMuscu > 0) {
+                document.getElementById('muscuOui').checked = true;
+                document.getElementById('detailsMuscu').style.display = 'block';
+                document.getElementById('caloriesMuscu').value = donnee.caloriesMuscu || 0;
+                document.getElementById('dureeMuscu').value = donnee.dureeMuscu || 0;
+                document.getElementById('poids').value = donnee.poids || 0;
+            } else {
+                document.getElementById('muscuNon').checked = true;
+                document.getElementById('detailsMuscu').style.display = 'none';
+            }
+
+            // Remove the old entry before adding the updated one
+            historique.splice(index, 1);
+            localStorage.setItem('historiqueCalories', JSON.stringify(historique));
+
+            showSection('calcul');
+        }
+
+        function supprimerDonnee(index) {
+            let historique = JSON.parse(localStorage.getItem('historiqueCalories')) || [];
+            historique.splice(index, 1);
+            localStorage.setItem('historiqueCalories', JSON.stringify(historique));
+            afficherTableau();
+            afficherGraphiques();
         }
     </script>
 </body>

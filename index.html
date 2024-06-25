@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Compteur de Calorie en Ligne</title>
-      <link rel="shortcut icon" href="logo.png">
+    <link rel="shortcut icon" href="logo.png">
     <style>
         body {
             background: url('https://img.freepik.com/photos-premium/salle-sport-sombre-lumiere-rouge-bas-ecran_911201-3384.jpg') no-repeat center center fixed;
@@ -24,6 +24,25 @@
             font-size: 2em;
             color: #FF1F09;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            position: relative;
+        }
+        .back-button {
+            position: absolute;
+            top: 50%;
+            left: 20px;
+            transform: translateY(-50%);
+            background: #FF1F09;
+            border: none;
+            padding: 10px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .back-button svg {
+            width: 20px;
+            height: 20px;
         }
         .container {
             flex: 1;
@@ -102,6 +121,11 @@
 </head>
 <body>
     <header>
+        <button class="back-button" onclick="showSection('menu')">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+            </svg>
+        </button>
         Compteur de Calorie en Ligne
     </header>
     <div class="container">
@@ -168,6 +192,19 @@
         &copy; 2024 Compteur de Calorie en Ligne
     </footer>
     <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const sections = document.querySelectorAll('.section');
+
+            window.showSection = function(sectionId) {
+                sections.forEach(section => section.classList.remove('active'));
+                document.getElementById(sectionId).classList.add('active');
+                if (sectionId === 'graphique') {
+                    afficherGraphiques();
+                    afficherTableau();
+                }
+            };
+        });
+
         document.getElementById('regime').addEventListener('change', function() {
             const regime = document.getElementById('regime').value;
             const surplusDeficitText = document.getElementById('surplusDeficitText');
@@ -186,7 +223,7 @@
         document.getElementsByName('musculation').forEach(radio => {
             radio.addEventListener('change', function() {
                 const detailsMuscu = document.getElementById('detailsMuscu');
-                if (document.getElementById('muscuOui').checked) {
+                if (this.value === 'oui') {
                     detailsMuscu.style.display = 'block';
                 } else {
                     detailsMuscu.style.display = 'none';
@@ -194,17 +231,7 @@
             });
         });
 
-        function showSection(id) {
-            document.querySelectorAll('.section').forEach(section => {
-                section.classList.remove('active');
-            });
-            document.getElementById(id).classList.add('active');
-            if (id === 'graphique') {
-                afficherGraphiques();
-                afficherTableau();
-            }
-        }
-
+        let historique = JSON.parse(localStorage.getItem('historique')) || [];
         function calculerCalories() {
             const regime = document.getElementById('regime').value;
             const calories = parseInt(document.getElementById('calories').value) || 0;
@@ -240,165 +267,97 @@
             sauvegarderDonnees(totalCalories, caloriesBrulees, caloriesMuscu, dureeMuscu, poids);
         }
 
-        function sauvegarderDonnees(totalCalories, caloriesBrulees, caloriesMuscu, dureeMuscu, poids) {
-            const date = new Date().toISOString().split('T')[0]; // Format YYYY-MM-DD
-            const donnees = {
-                date: date,
-                totalCalories: totalCalories,
-                caloriesBrulees: caloriesBrulees,
-                caloriesMuscu: caloriesMuscu,
-                dureeMuscu: dureeMuscu,
-                poids: poids
-            };
-
-            let historique = JSON.parse(localStorage.getItem('historiqueCalories')) || [];
-            historique.push(donnees);
-            localStorage.setItem('historiqueCalories', JSON.stringify(historique));
-        }
 
         function afficherGraphiques() {
-            const historique = JSON.parse(localStorage.getItem('historiqueCalories')) || [];
-            const labels = historique.map(d => d.date);
-            const dataCalories = historique.map(d => d.totalCalories);
-            const dataPoids = historique.map(d => d.poids);
-            const dataDuree = historique.map(d => d.dureeMuscu);
-            const dataSurplusDeficit = historique.map(d => {
-                const regime = d.totalCalories - d.caloriesBrulees;
-                return regime > 2000 ? regime - 2000 : 2000 - regime;
-            });
+            const labels = historique.map(entry => entry.date);
+            const dataCalories = historique.map(entry => entry.totalCalories);
+            const dataPoids = historique.map(entry => entry.poids);
+            const dataDuree = historique.map(entry => entry.dureeMuscu);
+            const dataSurplusDeficit = historique.map(entry => entry.totalCalories - entry.caloriesBrulees);
 
-            const ctxCalories = document.getElementById('graphiqueCalories').getContext('2d');
-            const ctxPoids = document.getElementById('graphiquePoids').getContext('2d');
-            const ctxDuree = document.getElementById('graphiqueDuree').getContext('2d');
-            const ctxSurplusDeficit = document.getElementById('graphiqueSurplusDeficit').getContext('2d');
-
-            new Chart(ctxCalories, {
+            new Chart(document.getElementById('graphiqueCalories').getContext('2d'), {
                 type: 'line',
                 data: {
-                    labels: labels,
+                    labels,
                     datasets: [{
-                        label: 'Total Calories',
+                        label: 'Calories Totales',
                         data: dataCalories,
-                        borderColor: '#00bcd4',
-                        backgroundColor: 'rgba(0, 188, 212, 0.2)',
+                        borderColor: 'red',
                         borderWidth: 2,
-                        fill: true,
-                        tension: 0.1
+                        fill: false
                     }]
                 },
                 options: {
                     responsive: true,
                     scales: {
-                        x: {
-                            title: {
-                                display: true,
-                                text: 'Date'
-                            }
-                        },
                         y: {
-                            title: {
-                                display: true,
-                                text: 'Calories'
-                            }
+                            beginAtZero: true
                         }
                     }
                 }
             });
 
-            new Chart(ctxPoids, {
+            new Chart(document.getElementById('graphiquePoids').getContext('2d'), {
                 type: 'line',
                 data: {
-                    labels: labels,
+                    labels,
                     datasets: [{
-                        label: 'Poids (kg)',
+                        label: 'Poids',
                         data: dataPoids,
-                        borderColor: '#ff9800',
-                        backgroundColor: 'rgba(255, 152, 0, 0.2)',
+                        borderColor: 'blue',
                         borderWidth: 2,
-                        fill: true,
-                        tension: 0.1
+                        fill: false
                     }]
                 },
                 options: {
                     responsive: true,
                     scales: {
-                        x: {
-                            title: {
-                                display: true,
-                                text: 'Date'
-                            }
-                        },
                         y: {
-                            title: {
-                                display: true,
-                                text: 'Poids (kg)'
-                            }
+                            beginAtZero: true
                         }
                     }
                 }
             });
 
-            new Chart(ctxDuree, {
+            new Chart(document.getElementById('graphiqueDuree').getContext('2d'), {
                 type: 'line',
                 data: {
-                    labels: labels,
+                    labels,
                     datasets: [{
-                        label: 'Durée Musculation (min)',
+                        label: 'Durée Musculation',
                         data: dataDuree,
-                        borderColor: '#8bc34a',
-                        backgroundColor: 'rgba(139, 195, 74, 0.2)',
+                        borderColor: 'green',
                         borderWidth: 2,
-                        fill: true,
-                        tension: 0.1
+                        fill: false
                     }]
                 },
                 options: {
                     responsive: true,
                     scales: {
-                        x: {
-                            title: {
-                                display: true,
-                                text: 'Date'
-                            }
-                        },
                         y: {
-                            title: {
-                                display: true,
-                                text: 'Durée Musculation (min)'
-                            }
+                            beginAtZero: true
                         }
                     }
                 }
             });
 
-            new Chart(ctxSurplusDeficit, {
+            new Chart(document.getElementById('graphiqueSurplusDeficit').getContext('2d'), {
                 type: 'line',
                 data: {
-                    labels: labels,
+                    labels,
                     datasets: [{
-                        label: 'Surplus/Déficit Calories',
+                        label: 'Surplus/Déficit',
                         data: dataSurplusDeficit,
-                        borderColor: '#e91e63',
-                        backgroundColor: 'rgba(233, 30, 99, 0.2)',
+                        borderColor: 'orange',
                         borderWidth: 2,
-                        fill: true,
-                        tension: 0.1
+                        fill: false
                     }]
                 },
                 options: {
                     responsive: true,
                     scales: {
-                        x: {
-                            title: {
-                                display: true,
-                                text: 'Date'
-                            }
-                        },
                         y: {
-                            title: {
-                                display: true,
-                                text: 'Surplus/Déficit Calories'
-                            }
+                            beginAtZero: true
                         }
                     }
                 }
@@ -406,65 +365,28 @@
         }
 
         function afficherTableau() {
-            const historique = JSON.parse(localStorage.getItem('historiqueCalories')) || [];
-            const tbody = document.getElementById('tableHistorique').getElementsByTagName('tbody')[0];
+            const tbody = document.querySelector('#tableHistorique tbody');
             tbody.innerHTML = '';
-
-            historique.forEach((donnee, index) => {
-                const tr = document.createElement('tr');
-
-                Object.keys(donnee).forEach(key => {
-                    const td = document.createElement('td');
-                    td.innerText = donnee[key];
-                    tr.appendChild(td);
-                });
-
-                const tdActions = document.createElement('td');
-                const btnModifier = document.createElement('button');
-                btnModifier.innerText = 'Modifier';
-                btnModifier.onclick = () => modifierDonnee(index);
-                const btnSupprimer = document.createElement('button');
-                btnSupprimer.innerText = 'Supprimer';
-                btnSupprimer.onclick = () => supprimerDonnee(index);
-                tdActions.appendChild(btnModifier);
-                tdActions.appendChild(btnSupprimer);
-                tr.appendChild(tdActions);
-
-                tbody.appendChild(tr);
+            historique.forEach(entry => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${entry.date}</td>
+                    <td>${entry.totalCalories}</td>
+                    <td>${entry.caloriesBrulees}</td>
+                    <td>${entry.caloriesMuscu}</td>
+                    <td>${entry.dureeMuscu}</td>
+                    <td>${entry.poids}</td>
+                    <td><button onclick="supprimerEntree('${entry.date}')">Supprimer</button></td>
+                `;
+                tbody.appendChild(row);
             });
         }
 
-        function modifierDonnee(index) {
-            const historique = JSON.parse(localStorage.getItem('historiqueCalories')) || [];
-            const donnee = historique[index];
-
-            document.getElementById('regime').value = '3'; // Default to Maintenance
-            document.getElementById('calories').value = donnee.calories || 0;
-            document.getElementById('caloriesBrulees').value = donnee.caloriesBrulees || 0;
-            if (donnee.caloriesMuscu > 0) {
-                document.getElementById('muscuOui').checked = true;
-                document.getElementById('detailsMuscu').style.display = 'block';
-                document.getElementById('caloriesMuscu').value = donnee.caloriesMuscu || 0;
-                document.getElementById('dureeMuscu').value = donnee.dureeMuscu || 0;
-                document.getElementById('poids').value = donnee.poids || 0;
-            } else {
-                document.getElementById('muscuNon').checked = true;
-                document.getElementById('detailsMuscu').style.display = 'none';
-            }
-
-            // Remove the old entry before adding the updated one
-            historique.splice(index, 1);
-            localStorage.setItem('historiqueCalories', JSON.stringify(historique));
-
-            showSection('calcul');
-        }
-
-        function supprimerDonnee(index) {
-            let historique = JSON.parse(localStorage.getItem('historiqueCalories')) || [];
-            historique.splice(index, 1);
-            localStorage.setItem('historiqueCalories', JSON.stringify(historique));
-            afficherTableau();
+        function supprimerEntree(date) {
+            historique = historique.filter(entry => entry.date !== date);
+            localStorage.setItem('historique', JSON.stringify(historique));
             afficherGraphiques();
+            afficherTableau();
         }
     </script>
 </body>

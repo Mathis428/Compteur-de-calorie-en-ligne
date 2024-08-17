@@ -52,9 +52,9 @@
             align-items: center;
         }
         .section {
-            background: #333;
+            /*background: #333;
             padding: 20px;
-            margin: 20px 0;
+            margin: 20px 0;*/
             display: none;
             width: 100%;
             max-width: 500px;
@@ -117,26 +117,28 @@
             color: black;
         }
     </style>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-</head>
-<body>
-    <header>
-        <button class="back-button" onclick="showSection('menu')">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-            </svg>
-        </button>
-        Compteur de Calorie en Ligne
-    </header>
-    <div class="container">
-        <div id="menu" class="section active">
-            <h2>Menu Principal</h2>
-            <h2>Bienvenue sur mon site pour calculer vos calories en ligne</h2>
-            <img src="https://domf5oio6qrcr.cloudfront.net/medialibrary/7565/9c4b4ea8-04b5-4825-af61-c52fb17ca40e.jpg" alt="Bienvenue sur mon site" style="width: 500px;">
-            <p>Corrigez les erreurs des montres connectées avec mon outil de calcul de calories en ligne. Choisissez votre régime et suivez votre évolution jour après jour.</p>
-            <button onclick="showSection('calcul')">Calculer les calories</button>
-            <button onclick="showSection('graphique')">Voir l'évolution</button>
-        </div>
+         <!-- Ajout de Spline pour l'intégration 3D -->
+    <script type="module" src="https://unpkg.com/@splinetool/viewer@1.9.15/build/spline-viewer.js"></script>
+        </head>
+        <body>
+            <header>
+                <button class="back-button" onclick="showSection('menu')">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                    </svg>
+                </button>
+                Compteur de Calorie en Ligne
+            </header>
+            <div class="container">
+                <div id="menu" class="section active">
+                    <h2>Menu Principal</h2>
+                    <h2>Bienvenue sur mon site pour calculer vos calories en ligne</h2>
+                    <!-- Remplacement de l'image par le Spline Viewer -->
+                     <spline-viewer url="https://prod.spline.design/xQYlMF4YkLlPpjpB/scene.splinecode"></spline-viewer>
+                    <p>Corrigez les erreurs des montres connectées avec mon outil de calcul de calories en ligne. Choisissez votre régime et suivez votre évolution jour après jour.</p>
+                    <button onclick="showSection('calcul')">Calculer les calories</button>
+                    <button onclick="showSection('graphique')">Voir l'évolution</button>
+                </div>
         <div id="calcul" class="section">
             <h2>Calcul des Calories</h2>
             <label for="regime">Choisissez votre régime :</label>
